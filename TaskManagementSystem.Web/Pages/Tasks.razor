@@ -1,0 +1,238 @@
+@page "/tasks"
+@using System.Net.Http.Json
+@using Microsoft.JSInterop
+@using System.ComponentModel.DataAnnotations
+@inject HttpClient Http
+@inject NavigationManager NavigationManager
+@inject IJSRuntime JSRuntime
+
+<h3>Tasks</h3>
+
+<div class="mb-3">
+    <button class="btn btn-primary" @onclick="() => ShowCreateDialog = true">Create New Task</button>
+</div>
+
+@if (tasks == null)
+{
+    <p>Loading...</p>
+}
+else
+{
+    <div class="table-responsive">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Title</th>
+                    <th>Description</th>
+                    <th>Status</th>
+                    <th>Due Date</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var task in tasks)
+                {
+                    <tr>
+                        <td>@task.Title</td>
+                        <td>@task.Description</td>
+                        <td>@task.Status</td>
+                        <td>@task.DueDateTime.ToString("g")</td>
+                        <td>
+                            <button class="btn btn-sm btn-primary me-1" @onclick="() => EditTask(task)">Edit</button>
+                            <button class="btn btn-sm btn-danger" @onclick="() => DeleteTask(task.Id)">Delete</button>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+}
+
+@if (ShowCreateDialog)
+{
+    <div class="modal fade show" style="display: block;">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Create Task</h5>
+                    <button type="button" class="btn-close" @onclick="() => ShowCreateDialog = false"></button>
+                </div>
+                <div class="modal-body">
+                    <EditForm Model="@newTask" OnValidSubmit="CreateTask">
+                        <DataAnnotationsValidator />
+                        <ValidationSummary />
+
+        <div class="mb-3">
+            <label class="form-label">Title</label>
+            <InputText class="form-control" @bind-Value:event="oninput" @bind-Value="newTask.Title" />
+        </div>                        <div class="mb-3">
+                            <label class="form-label">Description</label>
+                            <InputTextArea class="form-control" @bind-Value:event="oninput" @bind-Value="newTask.Description" />
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Due Date/Time</label>
+                            <InputDateTime class="form-control" @bind-Value:event="oninput" @bind-Value="newTask.DueDateTime" />
+                        </div>
+
+                        <button type="submit" class="btn btn-primary">Create</button>
+                        <button type="button" class="btn btn-secondary" @onclick="() => ShowCreateDialog = false">Cancel</button>
+                    </EditForm>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="modal-backdrop fade show"></div>
+}
+
+@if (ShowEditDialog)
+{
+    <div class="modal fade show" style="display: block;">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Edit Task</h5>
+                    <button type="button" class="btn-close" @onclick="() => ShowEditDialog = false"></button>
+                </div>
+                <div class="modal-body">
+                    <EditForm Model="@editTask" OnValidSubmit="UpdateTask">
+                        <DataAnnotationsValidator />
+                        <ValidationSummary />
+
+                        <div class="mb-3">
+                            <label class="form-label">Title</label>
+                            <InputText class="form-control" @bind-Value:event="oninput" @bind-Value="editTask.Title" />
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Description</label>
+                            <InputTextArea class="form-control" @bind-Value:event="oninput" @bind-Value="editTask.Description" />
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Status</label>
+                            <InputSelect class="form-control" @bind-Value:event="onchange" @bind-Value="editTask.Status">
+                                @foreach (var status in Enum.GetValues(typeof(TaskStatus)))
+                                {
+                                    <option value="@status">@status</option>
+                                }
+                            </InputSelect>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Due Date/Time</label>
+                            <InputDateTime class="form-control" @bind-Value:event="oninput" @bind-Value="editTask.DueDateTime" />
+                        </div>
+
+                        <button type="submit" class="btn btn-primary">Update</button>
+                        <button type="button" class="btn btn-secondary" @onclick="() => ShowEditDialog = false">Cancel</button>
+                    </EditForm>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="modal-backdrop fade show"></div>
+}
+
+@code {
+    private List<TaskDto> tasks;
+    private bool ShowCreateDialog;
+    private bool ShowEditDialog;
+    private CreateTaskDto newTask = new();
+    private UpdateTaskDto editTask = new();
+    private Guid currentTaskId;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadTasks();
+    }
+
+    private async Task LoadTasks()
+    {
+        tasks = await Http.GetFromJsonAsync<List<TaskDto>>("api/tasks");
+    }
+
+    private async Task CreateTask()
+    {
+        try
+        {
+            var response = await Http.PostAsJsonAsync("api/tasks", newTask);
+            if (response.IsSuccessStatusCode)
+            {
+                ShowCreateDialog = false;
+                newTask = new();
+                await LoadTasks();
+            }
+            else
+            {
+                var error = await response.Content.ReadAsStringAsync();
+                await JSRuntime.InvokeVoidAsync("alert", $"Failed to create task: {error}");
+            }
+        }
+        catch (Exception ex)
+        {
+            await JSRuntime.InvokeVoidAsync("alert", $"Error creating task: {ex.Message}");
+        }
+    }
+
+    private void EditTask(TaskDto task)
+    {
+        currentTaskId = task.Id;
+        editTask = new UpdateTaskDto
+        {
+            Title = task.Title,
+            Description = task.Description,
+            Status = task.Status,
+            DueDateTime = task.DueDateTime
+        };
+        ShowEditDialog = true;
+    }
+
+    private async Task UpdateTask()
+    {
+        await Http.PutAsJsonAsync($"api/tasks/{currentTaskId}", editTask);
+        ShowEditDialog = false;
+        await LoadTasks();
+    }
+
+    private async Task DeleteTask(Guid id)
+    {
+        if (await JSRuntime.InvokeAsync<bool>("confirm", new[] { "Are you sure you want to delete this task?" }))
+        {
+            await Http.DeleteAsync($"api/tasks/{id}");
+            await LoadTasks();
+        }
+    }
+
+    public class TaskDto
+    {
+        public Guid Id { get; set; }
+        public string Title { get; set; }
+        public string Description { get; set; }
+        public TaskStatus Status { get; set; }
+        public DateTime DueDateTime { get; set; }
+        public DateTime CreatedAt { get; set; }
+        public DateTime? UpdatedAt { get; set; }
+    }
+
+    public class CreateTaskDto
+    {
+        [Required]
+        [StringLength(200)]
+        public string Title { get; set; }
+
+        [StringLength(1000)]
+        public string Description { get; set; }
+
+        [Required]
+        public DateTime DueDateTime { get; set; } = DateTime.Now.AddDays(1);
+    }
+
+    public class UpdateTaskDto
+    {
+        public string Title { get; set; }
+        public string Description { get; set; }
+        public TaskStatus Status { get; set; }
+        public DateTime DueDateTime { get; set; }
+    }
+}
