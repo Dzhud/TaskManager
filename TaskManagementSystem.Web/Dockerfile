@@ -15,11 +15,20 @@ WORKDIR /usr/share/nginx/html
 COPY --from=build /app/wwwroot .
 COPY nginx.conf /etc/nginx/nginx.conf
 
+# Install gettext for envsubst
+RUN apk add --no-cache gettext
+
 # Configure networking
 ENV PORT=80
 EXPOSE ${PORT}
 
-# Start nginx with proper port substitution
-CMD sh -c "envsubst '\$PORT' < /etc/nginx/nginx.conf > /etc/nginx/nginx.conf.tmp && \
-    mv /etc/nginx/nginx.conf.tmp /etc/nginx/nginx.conf && \
-    nginx -g 'daemon off;'"
+# Create a script to start nginx
+RUN echo '#!/bin/sh\n\
+PORT="${PORT:-80}"\n\
+envsubst "\\$PORT" < /etc/nginx/nginx.conf > /etc/nginx/nginx.conf.tmp\n\
+mv /etc/nginx/nginx.conf.tmp /etc/nginx/nginx.conf\n\
+nginx -g "daemon off;"' > /docker-entrypoint.sh && \
+chmod +x /docker-entrypoint.sh
+
+# Start nginx
+ENTRYPOINT ["/docker-entrypoint.sh"]
