@@ -73,7 +73,12 @@ app.UseCors("AllowAll");
 app.UseAuthorization();
 app.MapControllers();
 
-// Map health checks
-app.MapHealthChecks("/healthz");
+// Map health check with custom response
+app.MapGet("/health", async context =>
+{
+    context.Response.ContentType = "application/json";
+    var result = new { status = "healthy", timestamp = DateTime.UtcNow };
+    await context.Response.WriteAsJsonAsync(result);
+});
 
 app.Run();

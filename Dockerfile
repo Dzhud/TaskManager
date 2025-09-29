@@ -19,13 +19,10 @@ RUN dotnet publish TaskManagementSystem.API/TaskManagementSystem.API.csproj -c R
 FROM mcr.microsoft.com/dotnet/aspnet:8.0
 WORKDIR /app
 COPY --from=build /app .
-COPY start.sh .
-RUN chmod +x start.sh
 
 # Configure networking
-ENV ASPNETCORE_URLS=http://+:8080
-ENV PORT=8080
-EXPOSE 8080
+ENV ASPNETCORE_URLS=http://+:${PORT:-8080}
+EXPOSE ${PORT:-8080}
 
-# Use shell form to allow environment variable substitution
-ENTRYPOINT ./start.sh
+# Start the application
+ENTRYPOINT ["dotnet", "TaskManagementSystem.API.dll"]
