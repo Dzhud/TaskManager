@@ -17,6 +17,8 @@ A simple task management system that allows caseworkers to efficiently manage th
 - Frontend: Blazor WebAssembly
 - Database: SQLite with Entity Framework Core
 - Documentation: Swagger/OpenAPI
+- Deployment: Railway.app with Docker containers
+- Server: Nginx (Web Frontend)
 
 ## Project Structure
 
@@ -35,6 +37,13 @@ A simple task management system that allows caseworkers to efficiently manage th
 - DELETE /api/tasks/{id} - Delete a task
 
 ## Getting Started
+
+### Production URLs
+
+- Web Application: https://taskmanager-production-ad9d.up.railway.app
+- API Endpoint: https://taskmanager-production-6bd0.up.railway.app
+
+### Local Development
 
 1. Clone the repository
 2. Navigate to the API project directory: `cd TaskManagementSystem.API`
@@ -66,3 +75,19 @@ Run the tests using:
 ```bash
 dotnet test
 ```
+
+## Deployment
+
+The application is deployed on Railway.app with two services:
+
+### API Service
+- Deployed from the main branch
+- Uses Dockerfile in the root directory
+- Configured with SQLite database
+- Health check endpoint at `/health`
+
+### Web Service
+- Deployed from the main branch
+- Uses Dockerfile in TaskManagementSystem.Web directory
+- Served using Nginx
+- Configured to communicate with the production API
