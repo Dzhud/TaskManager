@@ -1,15 +1,43 @@
-**/bin/
-**/obj/
-**/.git
+# .NET build output
+**/[Bb]in/
+**/[Oo]bj/
+
+# Visual Studio / VS Code files
+**/.vs/
+**/.vscode/
+**/*.user
+**/*.userosscache
+**/*.sln.docstates
+
+# Development environment
+**/.git/
 **/.gitignore
-**/.vs
-**/.vscode
-**/docker-compose*
-**/compose*
-**/Dockerfile*
+**/.idea/
+**/.DS_Store
+
+# Docker files (except in root)
+**/[Dd]ocker-compose*
+**/[Dd]ockerfile*
+!Dockerfile
+!.dockerignore
+
+# Package and dependency files
+**/node_modules/
 **/*.dbmdl
 **/*.jfm
-**/charts
-**/node_modules
-**/.toolstarget
-**/.idea
+
+# Tests and documentation
+TaskManagementSystem.Tests/
+**/[Tt]est[Rr]esults/
+**/[Cc]overage/
+**/[Dd]ocs/
+
+# Blazor WebAssembly project (we're only deploying the API)
+TaskManagementSystem.Web/
+
+# Local development files
+**/*.[Ll]og
+**/*.sqlite
+**/*.db
+!TaskManagementSystem.API/Data/
+**/appsettings.Development.json
