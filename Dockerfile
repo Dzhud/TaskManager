@@ -20,9 +20,16 @@ FROM mcr.microsoft.com/dotnet/aspnet:8.0
 WORKDIR /app
 COPY --from=build /app .
 
-# Configure networking
+# Configure networking and environment
 ENV ASPNETCORE_URLS=http://+:${PORT:-8080}
+ENV ASPNETCORE_ENVIRONMENT=Production
+# Disable HTTPS redirection in production
+ENV ASPNETCORE_HTTPS_PORT=
+ENV ASPNETCORE_HTTP_PORTS=${PORT:-8080}
 EXPOSE ${PORT:-8080}
 
-# Start the application
-ENTRYPOINT ["dotnet", "TaskManagementSystem.API.dll"]
+# Ensure data directory exists
+RUN mkdir -p /app/Data
+
+# Start the application with proper logging
+ENTRYPOINT ["dotnet", "TaskManagementSystem.API.dll", "--urls", "http://+:${PORT:-8080}", "--verbose"]
