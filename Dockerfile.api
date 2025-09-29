@@ -1,0 +1,25 @@
+# Use SDK image to build
+FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
+WORKDIR /app
+
+# Create directory for SQLite database
+RUN mkdir -p /app/Data && \
+    chmod 777 /app/Data
+
+# Copy csproj files and restore dependencies
+COPY *.sln .
+COPY TaskManagementSystem.API/*.csproj ./TaskManagementSystem.API/
+COPY TaskManagementSystem.Core/*.csproj ./TaskManagementSystem.Core/
+COPY TaskManagementSystem.Infrastructure/*.csproj ./TaskManagementSystem.Infrastructure/
+RUN dotnet restore TaskManagementSystem.API/TaskManagementSystem.API.csproj
+
+# Copy the remaining files and build
+COPY . .
+RUN dotnet publish TaskManagementSystem.API/TaskManagementSystem.API.csproj -c Release -o out
+
+# Build runtime image
+FROM mcr.microsoft.com/dotnet/aspnet:8.0
+WORKDIR /app
+COPY --from=build /app/out .
+ENV ASPNETCORE_URLS=http://+:$PORT
+ENTRYPOINT ["dotnet", "TaskManagementSystem.API.dll"]

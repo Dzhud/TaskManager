@@ -136,7 +136,7 @@ else
 }
 
 @code {
-    private List<TaskDto> tasks;
+    private List<TaskDto> tasks = new();
     private bool ShowCreateDialog;
     private bool ShowEditDialog;
     private CreateTaskDto newTask = new();
@@ -150,7 +150,7 @@ else
 
     private async Task LoadTasks()
     {
-        tasks = await Http.GetFromJsonAsync<List<TaskDto>>("api/tasks");
+        tasks = await Http.GetFromJsonAsync<List<TaskDto>>("api/tasks") ?? new List<TaskDto>();
     }
 
     private async Task CreateTask()
@@ -230,8 +230,8 @@ else
     public class TaskDto
     {
         public Guid Id { get; set; }
-        public string Title { get; set; }
-        public string Description { get; set; }
+        public string Title { get; set; } = string.Empty;
+        public string Description { get; set; } = string.Empty;
         public WorkTaskStatus Status { get; set; }
         public DateTime DueDateTime { get; set; }
         public DateTime CreatedAt { get; set; }

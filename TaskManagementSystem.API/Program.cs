@@ -5,6 +5,12 @@ using TaskManagementSystem.Infrastructure.Repositories;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// Configure HTTPS
+builder.Services.AddHttpsRedirection(options =>
+{
+    options.HttpsPort = 7065; // This matches the port in launchSettings.json
+});
+
 // Add services to the container.
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
@@ -23,12 +29,33 @@ builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowAll",
         builder => builder
-            .WithOrigins("http://localhost:5175")
+            .SetIsOriginAllowed(_ => true) // Allow any origin in development
             .AllowAnyMethod()
-            .AllowAnyHeader());
+            .AllowAnyHeader()
+            .AllowCredentials());
 });
 
 var app = builder.Build();
+
+// Ensure database directory exists
+var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") 
+    ?? throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");
+var dbPath = Path.GetDirectoryName(
+    Path.Combine(builder.Environment.ContentRootPath, 
+    connectionString.Replace("Data Source=", "")))
+    ?? throw new InvalidOperationException("Invalid database path");
+    
+if (!Directory.Exists(dbPath))
+{
+    Directory.CreateDirectory(dbPath);
+}
+
+// Create database if it doesn't exist
+using (var scope = app.Services.CreateScope())
+{
+    var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+    db.Database.EnsureCreated();
+}
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
