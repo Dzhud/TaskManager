@@ -1,4 +1,6 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Diagnostics.HealthChecks;
+using Microsoft.Extensions.Diagnostics.HealthChecks.EntityFrameworkCore;
 using TaskManagementSystem.Core.Interfaces;
 using TaskManagementSystem.Infrastructure.Data;
 using TaskManagementSystem.Infrastructure.Repositories;
@@ -18,6 +20,9 @@ builder.Services.AddSwaggerGen(c =>
 {
     c.SwaggerDoc("v1", new() { Title = "Task Management System API", Version = "v1" });
 });
+
+// Add health checks
+builder.Services.AddHealthChecks();
 
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection")));
@@ -69,8 +74,7 @@ app.UseCors("AllowAll");
 app.UseAuthorization();
 app.MapControllers();
 
-// Add health check endpoint
-app.MapGet("/healthz", () => Results.Ok("Healthy"));
+// Map health checks
+app.MapHealthChecks("/healthz");
 
-// The application will use ASPNETCORE_URLS from environment variable
 app.Run();

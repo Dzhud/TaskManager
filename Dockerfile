@@ -1,14 +1,13 @@
 FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 WORKDIR /source
 
-# Copy csproj and restore as distinct layers
-COPY *.sln .
-COPY TaskManagementSystem.API/*.csproj ./TaskManagementSystem.API/
-COPY TaskManagementSystem.Core/*.csproj ./TaskManagementSystem.Core/
-COPY TaskManagementSystem.Infrastructure/*.csproj ./TaskManagementSystem.Infrastructure/
-COPY TaskManagementSystem.Web/*.csproj ./TaskManagementSystem.Web/
-COPY TaskManagementSystem.Tests/*.csproj ./TaskManagementSystem.Tests/
-RUN dotnet restore
+# Copy API and its dependencies only
+COPY TaskManagementSystem.API/TaskManagementSystem.API.csproj ./TaskManagementSystem.API/
+COPY TaskManagementSystem.Core/TaskManagementSystem.Core.csproj ./TaskManagementSystem.Core/
+COPY TaskManagementSystem.Infrastructure/TaskManagementSystem.Infrastructure.csproj ./TaskManagementSystem.Infrastructure/
+
+# Restore as distinct layers
+RUN dotnet restore ./TaskManagementSystem.API/TaskManagementSystem.API.csproj
 
 # Copy everything else and build
 COPY TaskManagementSystem.API/. ./TaskManagementSystem.API/
