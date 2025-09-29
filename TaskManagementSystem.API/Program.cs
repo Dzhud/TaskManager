@@ -69,4 +69,8 @@ app.UseCors("AllowAll");
 app.UseAuthorization();
 app.MapControllers();
 
+// Add health check endpoint
+app.MapGet("/healthz", () => Results.Ok("Healthy"));
+
+// The application will use ASPNETCORE_URLS from environment variable
 app.Run();
