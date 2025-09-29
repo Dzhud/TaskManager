@@ -1,0 +1,15 @@
+**/bin/
+**/obj/
+**/.git
+**/.gitignore
+**/.vs
+**/.vscode
+**/docker-compose*
+**/compose*
+**/Dockerfile*
+**/*.dbmdl
+**/*.jfm
+**/charts
+**/node_modules
+**/.toolstarget
+**/.idea
