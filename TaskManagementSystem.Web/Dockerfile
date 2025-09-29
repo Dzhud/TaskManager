@@ -19,5 +19,7 @@ COPY nginx.conf /etc/nginx/nginx.conf
 ENV PORT=80
 EXPOSE ${PORT}
 
-# Start nginx
-CMD sed -i -e 's/$PORT/'"$PORT"'/g' /etc/nginx/nginx.conf && nginx -g 'daemon off;'
+# Start nginx with proper port substitution
+CMD sh -c "envsubst '\$PORT' < /etc/nginx/nginx.conf > /etc/nginx/nginx.conf.tmp && \
+    mv /etc/nginx/nginx.conf.tmp /etc/nginx/nginx.conf && \
+    nginx -g 'daemon off;'"
